@@ -3,6 +3,7 @@ import 'package:restifyapp/core/theme/app_colors.dart';
 import 'package:restifyapp/feature/auth/presentation/widget/custom_text_field.dart';
 import 'package:restifyapp/feature/auth/presentation/widget/primary_button.dart';
 import 'package:restifyapp/feature/home/presentation/screen/home_screen.dart';
+import 'package:restifyapp/feature/auth/domain/model/user_role.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +21,38 @@ class _LoginScreenState extends State<LoginScreen> {
     _userController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _handleLogin() {
+    final user = _userController.text.trim().toLowerCase();
+    final pass = _passwordController.text.trim();
+
+    debugPrint('Intentando login con: $user');
+
+    UserRole? selectedRole;
+
+    if (user == 'mesero' && pass == '123456') {
+      selectedRole = UserRole.waiter;
+    } else if (user == 'cocina' && pass == '123456') {
+      selectedRole = UserRole.kitchen;
+    } else if (user == 'admin' && pass == 'admin') {
+      selectedRole = UserRole.admin;
+    }
+
+    if (selectedRole != null) {
+      debugPrint('Login exitoso como $user');
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => HomeScreen(role: selectedRole!)),
+      );
+    } else {
+      debugPrint('Credenciales incorrectas');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Usuario o contraseña incorrectos'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -76,14 +109,14 @@ class _LoginScreenState extends State<LoginScreen> {
               // Formulario
               CustomTextField(
                 label: 'Usuario o Correo',
-                hint: 'ejemplo@restify.com',
+                hint: 'ejemplo: mesero o cocina',
                 icon: Icons.person_outline,
                 controller: _userController,
               ),
               const SizedBox(height: 24),
               CustomTextField(
                 label: 'Contraseña',
-                hint: '••••••••',
+                hint: '123456',
                 icon: Icons.lock_outline_rounded,
                 isPassword: true,
                 controller: _passwordController,
@@ -92,17 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // Botón de Inicio de Sesión
               PrimaryButton(
                 text: 'ENTRAR',
-                onPressed: () {
-                  debugPrint('Botón ENTRAR presionado');
-                  try {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => const HomeScreen()),
-                    );
-                    debugPrint('Navegación hacia HomeScreen ejecutada');
-                  } catch (e) {
-                    debugPrint('Error en navegación: $e');
-                  }
-                },
+                onPressed: _handleLogin,
               ),
               const SizedBox(height: 40),
               // Decoración o Pie de página minimalista
