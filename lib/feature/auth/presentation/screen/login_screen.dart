@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:restifyapp/core/theme/app_colors.dart';
+import 'package:restifyapp/feature/auth/presentation/provider/login_provider.dart';
 import 'package:restifyapp/feature/auth/presentation/widget/custom_text_field.dart';
 import 'package:restifyapp/feature/auth/presentation/widget/primary_button.dart';
 import 'package:restifyapp/feature/home/presentation/screen/home_screen.dart';
@@ -24,35 +26,67 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() {
-    final user = _userController.text.trim().toLowerCase();
-    final pass = _passwordController.text.trim();
+    final email = _userController.text.trim().toLowerCase();
+    final password = _passwordController.text.trim();
 
-    debugPrint('Intentando login con: $user');
-
-    UserRole? selectedRole;
-
-    if (user == 'mesero' && pass == '123456') {
-      selectedRole = UserRole.waiter;
-    } else if (user == 'cocina' && pass == '123456') {
-      selectedRole = UserRole.kitchen;
-    } else if (user == 'admin' && pass == 'admin') {
-      selectedRole = UserRole.admin;
-    }
-
-    if (selectedRole != null) {
-      debugPrint('Login exitoso como $user');
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => HomeScreen(role: selectedRole!)),
-      );
-    } else {
-      debugPrint('Credenciales incorrectas');
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Usuario o contraseña incorrectos'),
+          content: Text('Por favor completa todos los campos'),
           backgroundColor: AppColors.error,
         ),
       );
+      return;
     }
+
+    debugPrint('Intentando login con: $email');
+
+    final provider = context.read<LoginProvider>();
+    provider
+        .login(email, password)
+        .then((success) {
+          if (success && mounted) {
+            final user = provider.user;
+            if (user != null) {
+              debugPrint('Login exitoso como $email - Rol: ${user.rolNombre}');
+
+              // Mapear rol del backend al enum local
+              UserRole? selectedRole;
+              if (user.rolNombre.toLowerCase().contains('mesero')) {
+                selectedRole = UserRole.waiter;
+              } else if (user.rolNombre.toLowerCase().contains('cocina')) {
+                selectedRole = UserRole.kitchen;
+              } else if (user.rolNombre.toLowerCase().contains('admin')) {
+                selectedRole = UserRole.admin;
+              }
+
+              if (selectedRole != null) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(role: selectedRole!),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Rol no reconocido: ${user.rolNombre}'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            }
+          }
+        })
+        .catchError((e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(provider.error ?? 'Error desconocido'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        });
   }
 
   @override
@@ -100,32 +134,74 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 8),
               const Text(
                 'Bienvenido de nuevo a tu panel',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 48),
+              // Error message
+              Consumer<LoginProvider>(
+                builder: (context, loginProvider, _) {
+                  if (loginProvider.error != null) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 24.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.error),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error, color: AppColors.error),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                loginProvider.error!,
+                                style: const TextStyle(
+                                  color: AppColors.error,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => loginProvider.clearError(),
+                              child: const Icon(
+                                Icons.close,
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
               // Formulario
               CustomTextField(
                 label: 'Usuario o Correo',
-                hint: 'ejemplo: mesero o cocina',
+                hint: 'ejemplo@correo.com',
                 icon: Icons.person_outline,
                 controller: _userController,
               ),
               const SizedBox(height: 24),
               CustomTextField(
                 label: 'Contraseña',
-                hint: '123456',
+                hint: 'Tu contraseña',
                 icon: Icons.lock_outline_rounded,
                 isPassword: true,
                 controller: _passwordController,
               ),
               const SizedBox(height: 40),
               // Botón de Inicio de Sesión
-              PrimaryButton(
-                text: 'ENTRAR',
-                onPressed: _handleLogin,
+              Consumer<LoginProvider>(
+                builder: (context, loginProvider, _) {
+                  return PrimaryButton(
+                    text: loginProvider.isLoading ? 'INGRESANDO...' : 'ENTRAR',
+                    onPressed: loginProvider.isLoading ? () {} : _handleLogin,
+                  );
+                },
               ),
               const SizedBox(height: 40),
               // Decoración o Pie de página minimalista
