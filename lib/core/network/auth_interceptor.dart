@@ -8,7 +8,7 @@ class AuthInterceptor extends Interceptor {
 
   AuthInterceptor(this._storage);
 
-  static const _publicPaths = ['/api/v1/auth/login'];
+  static const _publicPaths = ['/api/v1/authentication/login'];
 
   @override
   void onRequest(
@@ -16,13 +16,17 @@ class AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     final isPublic = _publicPaths.any((path) => options.path.contains(path));
-
     options.headers.remove('Authorization');
 
     if (!isPublic) {
-      final token = await _storage.read(key: 'token');
-      if (token != null && token.isNotEmpty) {
-        options.headers['Authorization'] = 'Bearer $token';
+      try {
+        final token = await _storage.read(key: 'token');
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+      } catch (e) {
+        // Silenciar errores de lectura de storage
+        print('Error reading token from storage: $e');
       }
     }
 

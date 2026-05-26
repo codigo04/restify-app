@@ -20,6 +20,18 @@ import 'package:restifyapp/feature/auth/data/datasource/login_datasource.dart'
 import 'package:restifyapp/feature/auth/data/repository/test3.dart' as _i501;
 import 'package:restifyapp/feature/auth/domain/repository/LoginRepositoryImpl.dart'
     as _i695;
+import 'package:restifyapp/feature/order/data/datasource/producto_datasource.dart'
+    as _i547;
+import 'package:restifyapp/feature/order/data/repository/producto_repository_impl.dart'
+    as _i709;
+import 'package:restifyapp/feature/order/domain/repository/producto_repository.dart'
+    as _i224;
+import 'package:restifyapp/feature/tables/data/datasource/mesa_datasource.dart'
+    as _i268;
+import 'package:restifyapp/feature/tables/data/repository/mesa_repository.dart'
+    as _i97;
+import 'package:restifyapp/feature/tables/domain/repository/mesa_repository_impl.dart'
+    as _i969;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -42,11 +54,25 @@ extension GetItInjectableX on _i174.GetIt {
         baseUrl: gh<String>(instanceName: 'BaseUrl'),
       ),
     );
+    gh.lazySingleton<_i268.MesaDataSource>(
+      () => _i268.MesaDataSourceImpl(gh<_i774.ApiClient>()),
+    );
     gh.lazySingleton<_i54.LoginDataSource>(
       () => _i54.LoginDataSourceImpl(gh<_i774.ApiClient>()),
     );
+    gh.lazySingleton<_i97.MesaRepository>(
+      () => _i969.MesaRepositoryImpl(dataSource: gh<_i268.MesaDataSource>()),
+    );
+    gh.lazySingleton<_i547.ProductoDataSource>(
+      () => _i547.ProductoDataSourceImpl(gh<_i774.ApiClient>()),
+    );
     gh.lazySingleton<_i501.LoginRepository>(
       () => _i695.LoginRepositoryImpl(dataSource: gh<_i54.LoginDataSource>()),
+    );
+    gh.lazySingleton<_i224.ProductoRepository>(
+      () => _i709.ProductoRepositoryImpl(
+        dataSource: gh<_i547.ProductoDataSource>(),
+      ),
     );
     return this;
   }

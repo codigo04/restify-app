@@ -5,6 +5,10 @@ import 'package:restifyapp/feature/auth/presentation/screen/login_screen.dart';
 import 'package:restifyapp/core/theme/app_colors.dart';
 import 'package:restifyapp/core/di/injection.dart';
 import 'package:restifyapp/feature/auth/presentation/provider/login_provider.dart';
+import 'package:restifyapp/feature/tables/data/repository/mesa_repository.dart';
+import 'package:restifyapp/feature/tables/presentation/provider/mesa_provider.dart';
+import 'package:restifyapp/feature/order/domain/repository/producto_repository.dart';
+import 'package:restifyapp/feature/order/presentation/provider/producto_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +25,12 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (_) => LoginProvider(repository: getIt<LoginRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => MesaProvider(repository: getIt<MesaRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProductoProvider(repository: getIt<ProductoRepository>()),
         ),
       ],
       child: MaterialApp(

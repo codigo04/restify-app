@@ -1,15 +1,18 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:restifyapp/feature/auth/data/repository/test3.dart';
 import 'package:restifyapp/feature/auth/domain/model/user.dart';
 
 class LoginProvider extends ChangeNotifier {
   final LoginRepository repository;
+  final FlutterSecureStorage _secureStorage;
 
   User? _user;
   bool _isLoading = false;
   String? _error;
 
-  LoginProvider({required this.repository});
+  LoginProvider({required this.repository, FlutterSecureStorage? secureStorage})
+    : _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   // Getters
   User? get user => _user;
@@ -26,6 +29,12 @@ class LoginProvider extends ChangeNotifier {
 
     try {
       _user = await repository.login(email, password);
+
+      // Guardar token en FlutterSecureStorage
+      if (_user?.token != null && (_user?.token ?? '').isNotEmpty) {
+        await _secureStorage.write(key: 'token', value: _user!.token);
+      }
+
       _error = null;
       notifyListeners();
       return true;
@@ -41,10 +50,11 @@ class LoginProvider extends ChangeNotifier {
   }
 
   /// Cierra la sesión
-  void logout() {
+  Future<void> logout() async {
     _user = null;
     _error = null;
     _isLoading = false;
+    await _secureStorage.delete(key: 'token');
     notifyListeners();
   }
 

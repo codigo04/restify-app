@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:restifyapp/core/theme/app_colors.dart';
 import 'package:restifyapp/feature/tables/domain/model/table_model.dart';
+import 'package:restifyapp/feature/tables/presentation/provider/mesa_provider.dart';
 import 'package:restifyapp/feature/order/presentation/screen/order_taking_screen.dart';
 
 class TablesScreen extends StatefulWidget {
@@ -18,94 +20,6 @@ class _TablesScreenState extends State<TablesScreen>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
-  // Datos de prueba simulando las mesas del restaurante asignadas a diferentes zonas
-  final List<TableModel> _mockTables = [
-    TableModel(
-      id: '1',
-      name: 'Mesa 01',
-      capacity: 4,
-      status: TableStatus.available,
-      zone: 'Salón Central',
-    ),
-    TableModel(
-      id: '2',
-      name: 'Mesa 02',
-      capacity: 2,
-      status: TableStatus.occupied,
-      zone: 'Salón Central',
-    ),
-    TableModel(
-      id: '3',
-      name: 'Mesa 03',
-      capacity: 4,
-      status: TableStatus.reserved,
-      zone: 'Zona VIP',
-    ),
-    TableModel(
-      id: '4',
-      name: 'Mesa 04',
-      capacity: 6,
-      status: TableStatus.available,
-      zone: 'Salón Central',
-    ),
-    TableModel(
-      id: '5',
-      name: 'Mesa 05',
-      capacity: 2,
-      status: TableStatus.cleaning,
-      zone: 'Terraza',
-    ),
-    TableModel(
-      id: '6',
-      name: 'Mesa 06',
-      capacity: 4,
-      status: TableStatus.occupied,
-      zone: 'Terraza',
-    ),
-    TableModel(
-      id: '7',
-      name: 'Mesa 07',
-      capacity: 8,
-      status: TableStatus.available,
-      zone: 'Zona VIP',
-    ),
-    TableModel(
-      id: '8',
-      name: 'Mesa 08',
-      capacity: 4,
-      status: TableStatus.available,
-      zone: 'Salón Central',
-    ),
-    TableModel(
-      id: '9',
-      name: 'Mesa 09',
-      capacity: 2,
-      status: TableStatus.occupied,
-      zone: 'Barra',
-    ),
-    TableModel(
-      id: '10',
-      name: 'Mesa 10',
-      capacity: 4,
-      status: TableStatus.reserved,
-      zone: 'Barra',
-    ),
-    TableModel(
-      id: '11',
-      name: 'Mesa 11',
-      capacity: 6,
-      status: TableStatus.available,
-      zone: 'Terraza',
-    ),
-    TableModel(
-      id: '12',
-      name: 'Mesa 12',
-      capacity: 2,
-      status: TableStatus.cleaning,
-      zone: 'Zona VIP',
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -116,6 +30,9 @@ class _TablesScreenState extends State<TablesScreen>
     _pulseAnimation = Tween<double>(begin: 0.97, end: 1.03).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MesaProvider>().loadMesas();
+    });
   }
 
   @override
@@ -124,11 +41,10 @@ class _TablesScreenState extends State<TablesScreen>
     super.dispose();
   }
 
-  int _getCountByStatus(TableStatus? status) {
-    // Si hay una zona seleccionada que no sea 'Todos', primero filtramos por zona
+  int _getCountByStatus(List<TableModel> mesas, TableStatus? status) {
     final zoneTables = _selectedZone == 'Todos'
-        ? _mockTables
-        : _mockTables.where((t) => t.zone == _selectedZone).toList();
+        ? mesas
+        : mesas.where((t) => t.zone == _selectedZone).toList();
 
     if (status == null) return zoneTables.length;
     return zoneTables.where((t) => t.status == status).toList().length;
@@ -136,9 +52,12 @@ class _TablesScreenState extends State<TablesScreen>
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<MesaProvider>();
+    final mesas = provider.mesas;
+
     final zoneFiltered = _selectedZone == 'Todos'
-        ? _mockTables
-        : _mockTables.where((t) => t.zone == _selectedZone).toList();
+        ? mesas
+        : mesas.where((t) => t.zone == _selectedZone).toList();
 
     final filteredTables = _selectedFilter == null
         ? zoneFiltered
@@ -186,12 +105,7 @@ class _TablesScreenState extends State<TablesScreen>
               ),
               tooltip: 'Sincronizar',
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Estado de mesas actualizado'),
-                    duration: Duration(seconds: 1),
-                  ),
-                );
+                context.read<MesaProvider>().loadMesas();
               },
             ),
           ),
@@ -199,28 +113,48 @@ class _TablesScreenState extends State<TablesScreen>
       ),
       body: Column(
         children: [
-          _buildStatsRow(),
+          _buildStatsRow(mesas),
           _buildZoneSelector(),
           const Divider(color: AppColors.greyBorder, height: 1),
           Expanded(
-            child: filteredTables.isEmpty
-                ? _buildEmptyState()
-                : GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount:
-                              2, // 2 mesas por fila para un diseño premium
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.85,
+            child: provider.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : provider.error != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.wifi_off_rounded, size: 48, color: AppColors.textSecondary),
+                            const SizedBox(height: 12),
+                            Text(
+                              provider.error!,
+                              style: const TextStyle(color: AppColors.textSecondary),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () => context.read<MesaProvider>().loadMesas(),
+                              child: const Text('Reintentar'),
+                            ),
+                          ],
                         ),
-                    itemCount: filteredTables.length,
-                    itemBuilder: (context, index) {
-                      final table = filteredTables[index];
-                      return _buildTableCard(table);
-                    },
-                  ),
+                      )
+                    : filteredTables.isEmpty
+                        ? _buildEmptyState()
+                        : GridView.builder(
+                            padding: const EdgeInsets.all(16),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 0.85,
+                            ),
+                            itemCount: filteredTables.length,
+                            itemBuilder: (context, index) {
+                              final table = filteredTables[index];
+                              return _buildTableCard(table);
+                            },
+                          ),
           ),
         ],
       ),
@@ -252,7 +186,7 @@ class _TablesScreenState extends State<TablesScreen>
   }
 
   // Dashboard de estadísticas flotante
-  Widget _buildStatsRow() {
+  Widget _buildStatsRow(List<TableModel> mesas) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       color: AppColors.surface,
@@ -261,36 +195,11 @@ class _TablesScreenState extends State<TablesScreen>
         physics: const BouncingScrollPhysics(),
         child: Row(
           children: [
-            _buildStatCard(
-              null,
-              'Todas',
-              Colors.blueGrey,
-              Icons.grid_view_rounded,
-            ),
-            _buildStatCard(
-              TableStatus.available,
-              'Libres',
-              AppColors.success,
-              Icons.check_circle_rounded,
-            ),
-            _buildStatCard(
-              TableStatus.occupied,
-              'Ocupadas',
-              AppColors.error,
-              Icons.restaurant_rounded,
-            ),
-            _buildStatCard(
-              TableStatus.reserved,
-              'Reservadas',
-              Colors.blue,
-              Icons.bookmark_rounded,
-            ),
-            _buildStatCard(
-              TableStatus.cleaning,
-              'Limpieza',
-              Colors.orange,
-              Icons.cleaning_services_rounded,
-            ),
+            _buildStatCard(mesas, null, 'Todas', Colors.blueGrey, Icons.grid_view_rounded),
+            _buildStatCard(mesas, TableStatus.available, 'Libres', AppColors.success, Icons.check_circle_rounded),
+            _buildStatCard(mesas, TableStatus.occupied, 'Ocupadas', AppColors.error, Icons.restaurant_rounded),
+            _buildStatCard(mesas, TableStatus.reserved, 'Reservadas', Colors.blue, Icons.bookmark_rounded),
+            _buildStatCard(mesas, TableStatus.cleaning, 'Limpieza', Colors.orange, Icons.cleaning_services_rounded),
           ],
         ),
       ),
@@ -298,13 +207,14 @@ class _TablesScreenState extends State<TablesScreen>
   }
 
   Widget _buildStatCard(
+    List<TableModel> mesas,
     TableStatus? status,
     String label,
     Color color,
     IconData icon,
   ) {
     final isSelected = _selectedFilter == status;
-    final count = _getCountByStatus(status);
+    final count = _getCountByStatus(mesas, status);
 
     return GestureDetector(
       onTap: () {
@@ -1006,18 +916,7 @@ class _TablesScreenState extends State<TablesScreen>
     final isCurrent = table.status == targetStatus;
     return InkWell(
       onTap: () {
-        setState(() {
-          final idx = _mockTables.indexWhere((t) => t.id == table.id);
-          if (idx != -1) {
-            _mockTables[idx] = TableModel(
-              id: table.id,
-              name: table.name,
-              capacity: table.capacity,
-              status: targetStatus,
-              zone: table.zone,
-            );
-          }
-        });
+        context.read<MesaProvider>().updateTableStatus(table.id, targetStatus);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

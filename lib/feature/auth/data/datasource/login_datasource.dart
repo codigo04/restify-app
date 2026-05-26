@@ -20,7 +20,7 @@ class LoginDataSourceImpl implements LoginDataSource {
       final request = LoginRequest(email: email, password: password);
 
       final response = await _client.dio.post(
-        '/api/v1/auth/login',
+        '/api/v1/authentication/login',
         data: request.toJson(),
       );
 
