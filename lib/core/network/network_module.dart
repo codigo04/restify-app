@@ -6,7 +6,7 @@ import 'package:restifyapp/core/network/auth_interceptor.dart';
 @module
 abstract class NetworkModule {
   @Named('BaseUrl') // Entorno desarrollo
-  String get baseUrl => 'http://207.180.29.72:8082';
+  String get baseUrl => 'http://192.168.18.30:8080';
 
   // @Named('BaseUrl') // Entorno produccion
   // String get baseUrl => 'https://night-pass-go-api-fcigf.us-east-1.migetapp.com';

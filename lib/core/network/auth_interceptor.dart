@@ -8,7 +8,7 @@ class AuthInterceptor extends Interceptor {
 
   AuthInterceptor(this._storage);
 
-  static const _publicPaths = ['/api/v1/authentication/login'];
+  static const _publicPaths = ['/api/v1/auth-service/authentication/login'];
 
   @override
   void onRequest(
@@ -26,7 +26,7 @@ class AuthInterceptor extends Interceptor {
         }
       } catch (e) {
         // Silenciar errores de lectura de storage
-        print('Error reading token from storage: $e');
+        // print('Error reading token from storage: $e');
       }
     }
 

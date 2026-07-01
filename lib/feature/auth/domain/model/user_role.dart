@@ -1,1 +1,1 @@
-enum UserRole { waiter, kitchen, admin }
+enum UserRole { waiter, kitchen, SUPER_ADMIN }

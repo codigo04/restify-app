@@ -18,7 +18,7 @@ class DashboardScreen extends StatelessWidget {
         return 'Mesero';
       case UserRole.kitchen:
         return 'Jefe de Cocina';
-      case UserRole.admin:
+      case UserRole.SUPER_ADMIN:
         return 'Administrador';
     }
   }
@@ -68,7 +68,7 @@ class DashboardScreen extends StatelessWidget {
         return 'Salomón';
       case UserRole.kitchen:
         return 'Chef Gustavo';
-      case UserRole.admin:
+      case UserRole.SUPER_ADMIN:
         return 'Administrador';
     }
   }
@@ -79,7 +79,7 @@ class DashboardScreen extends StatelessWidget {
         return 3;
       case UserRole.kitchen:
         return 4;
-      case UserRole.admin:
+      case UserRole.SUPER_ADMIN:
         return 5;
     }
   }
@@ -101,9 +101,7 @@ class DashboardScreen extends StatelessWidget {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildQuickActionsSection(),
-                ],
+                children: [_buildQuickActionsSection()],
               ),
             ),
           ],
@@ -161,7 +159,7 @@ class DashboardScreen extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        role == UserRole.admin
+                        role == UserRole.SUPER_ADMIN
                             ? Icons.admin_panel_settings_rounded
                             : role == UserRole.kitchen
                             ? Icons.soup_kitchen_rounded
@@ -217,7 +215,6 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
-
 
   // Acciones Rápidas con callback interactivo para cambiar de tabs
   Widget _buildQuickActionsSection() {
@@ -386,6 +383,4 @@ class DashboardScreen extends StatelessWidget {
       ],
     );
   }
-
-
 }

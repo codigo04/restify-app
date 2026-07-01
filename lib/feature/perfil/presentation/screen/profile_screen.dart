@@ -14,7 +14,7 @@ class ProfileScreen extends StatelessWidget {
         return 'Salomón Guerrero';
       case UserRole.kitchen:
         return 'Chef Gustavo Olivera';
-      case UserRole.admin:
+      case UserRole.SUPER_ADMIN:
         return 'Administrador Principal';
     }
   }
@@ -25,7 +25,7 @@ class ProfileScreen extends StatelessWidget {
         return 'salomon.mesero@restify.com';
       case UserRole.kitchen:
         return 'gustavo.cocina@restify.com';
-      case UserRole.admin:
+      case UserRole.SUPER_ADMIN:
         return 'admin@restify.com';
     }
   }
@@ -36,7 +36,7 @@ class ProfileScreen extends StatelessWidget {
         return 'Mesero Profesional';
       case UserRole.kitchen:
         return 'Jefe de Cocina / KDS';
-      case UserRole.admin:
+      case UserRole.SUPER_ADMIN:
         return 'Administrador del Sistema';
     }
   }
@@ -47,7 +47,7 @@ class ProfileScreen extends StatelessWidget {
         return Icons.room_service_rounded;
       case UserRole.kitchen:
         return Icons.soup_kitchen_rounded;
-      case UserRole.admin:
+      case UserRole.SUPER_ADMIN:
         return Icons.admin_panel_settings_rounded;
     }
   }
@@ -67,13 +67,7 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Center(
-        child: Icon(
-          _getRoleIcon(),
-          color: Colors.white,
-          size: 48,
-        ),
-      ),
+      child: Center(child: Icon(_getRoleIcon(), color: Colors.white, size: 48)),
     );
   }
 
@@ -121,7 +115,7 @@ class ProfileScreen extends StatelessWidget {
             'color': AppColors.success,
           },
         ];
-      case UserRole.admin:
+      case UserRole.SUPER_ADMIN:
         return [
           {
             'label': 'Ingresos hoy',
@@ -175,7 +169,10 @@ class ProfileScreen extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actionsPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -214,9 +211,7 @@ class ProfileScreen extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
                   'Salir',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
             ),
@@ -277,7 +272,10 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   // Badge de Estado En Línea
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.success.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(12),
@@ -334,11 +332,17 @@ class ProfileScreen extends StatelessWidget {
                 return Expanded(
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 4),
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.greyBorder, width: 1.5),
+                      border: Border.all(
+                        color: AppColors.greyBorder,
+                        width: 1.5,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.01),
@@ -453,10 +457,7 @@ class ProfileScreen extends StatelessWidget {
                 icon: const Icon(Icons.logout_rounded, size: 20),
                 label: const Text(
                   'Cerrar Sesión Activa',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
                 ),
               ),
             ),

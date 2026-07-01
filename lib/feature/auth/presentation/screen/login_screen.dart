@@ -26,10 +26,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() {
-    final email = _userController.text.trim().toLowerCase();
+    final username = _userController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
+    if (username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Por favor completa todos los campos'),
@@ -39,25 +39,26 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    debugPrint('Intentando login con: $email');
+    debugPrint('Intentando login con: $username');
 
     final provider = context.read<LoginProvider>();
     provider
-        .login(email, password)
+        .login(username, password)
         .then((success) {
           if (success && mounted) {
             final user = provider.user;
             if (user != null) {
-              debugPrint('Login exitoso como $email - Rol: ${user.rolNombre}');
+              debugPrint('Login exitoso como $username - Rol: ${user.rolNombre}');
 
-              // Mapear rol del backend al enum local
+              // Map JWT authorities claim to local role enum
               UserRole? selectedRole;
-              if (user.rolNombre.toLowerCase().contains('mesero')) {
-                selectedRole = UserRole.waiter;
-              } else if (user.rolNombre.toLowerCase().contains('cocina')) {
-                selectedRole = UserRole.kitchen;
-              } else if (user.rolNombre.toLowerCase().contains('admin')) {
-                selectedRole = UserRole.admin;
+              switch (user.rolNombre) {
+                case 'SUPER_ADMIN':
+                  selectedRole = UserRole.SUPER_ADMIN;
+                case 'MESERO':
+                  selectedRole = UserRole.waiter;
+                case 'COCINA':
+                  selectedRole = UserRole.kitchen;
               }
 
               if (selectedRole != null) {
@@ -78,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         })
         .catchError((e) {
+              debugPrint('Intentando login con:' );
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

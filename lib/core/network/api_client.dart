@@ -11,10 +11,10 @@ class ApiClient {
   }) : dio = Dio(
          BaseOptions(
            baseUrl: baseUrl,
-           connectTimeout: const Duration(seconds: 15),
-           receiveTimeout: const Duration(seconds: 15),
-           sendTimeout: const Duration(seconds: 15),
-           contentType: 'application/json',
+           connectTimeout: const Duration(seconds: 30),
+           receiveTimeout: const Duration(seconds: 30),
+           sendTimeout: const Duration(seconds: 30),
+           headers: {'Content-Type': 'application/json'},
          ),
        ) {
     dio.interceptors.add(authInterceptor);

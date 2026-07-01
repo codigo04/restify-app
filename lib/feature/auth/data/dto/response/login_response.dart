@@ -25,14 +25,12 @@ class LoginResponse {
 class LoginData {
   final Empresa empresa;
   final int idUsuario;
-  final UserRole rolResponse;
   final String token;
   final bool verificado;
 
   LoginData({
     required this.empresa,
     required this.idUsuario,
-    required this.rolResponse,
     required this.token,
     required this.verificado,
   });
@@ -41,7 +39,6 @@ class LoginData {
     return LoginData(
       empresa: Empresa.fromJson(json['empresa'] ?? {}),
       idUsuario: json['idUsuario'] ?? 0,
-      rolResponse: UserRole.fromJson(json['rolResponse'] ?? {}),
       token: json['token'] ?? '',
       verificado: json['verificado'] ?? false,
     );
@@ -51,7 +48,6 @@ class LoginData {
     return {
       'empresa': empresa.toJson(),
       'idUsuario': idUsuario,
-      'rolResponse': rolResponse.toJson(),
       'token': token,
       'verificado': verificado,
     };
@@ -90,17 +86,3 @@ class Empresa {
   }
 }
 
-class UserRole {
-  final int id;
-  final String nombre;
-
-  UserRole({required this.id, required this.nombre});
-
-  factory UserRole.fromJson(Map<String, dynamic> json) {
-    return UserRole(id: json['id'] ?? 0, nombre: json['nombre'] ?? '');
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'id': id, 'nombre': nombre};
-  }
-}

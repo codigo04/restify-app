@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:restifyapp/core/network/api_client.dart';
 import 'package:restifyapp/feature/auth/data/dto/request/login_request.dart';
 import 'package:restifyapp/feature/auth/data/dto/response/login_response.dart';
 
 abstract class LoginDataSource {
-  Future<LoginResponse> login(String email, String password);
+  Future<LoginResponse> login(String username, String password);
 }
 
 @LazySingleton(as: LoginDataSource)
@@ -15,12 +16,12 @@ class LoginDataSourceImpl implements LoginDataSource {
   LoginDataSourceImpl(this._client);
 
   @override
-  Future<LoginResponse> login(String email, String password) async {
+  Future<LoginResponse> login(String username, String password) async {
     try {
-      final request = LoginRequest(email: email, password: password);
+      final request = LoginRequest(username: username, password: password);
 
       final response = await _client.dio.post(
-        '/api/v1/authentication/login',
+        '/api/v1/auth-service/authentication/login',
         data: request.toJson(),
       );
 
@@ -30,8 +31,12 @@ class LoginDataSourceImpl implements LoginDataSource {
         throw Exception('Error en login: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      throw Exception('Error de conexión: ${e.message}');
+      debugPrint('[LoginDataSource] DioException type: ${e.type}');
+      debugPrint('[LoginDataSource] message: ${e.message}');
+      debugPrint('[LoginDataSource] response: ${e.response}');
+      throw Exception('Error de conexión: ${e.type} - ${e.message}');
     } catch (e) {
+      debugPrint('[LoginDataSource] unexpected error: $e');
       throw Exception('Error inesperado: $e');
     }
   }

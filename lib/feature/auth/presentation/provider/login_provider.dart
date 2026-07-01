@@ -22,13 +22,13 @@ class LoginProvider extends ChangeNotifier {
   bool get isAuthenticated => _user != null;
 
   /// Realiza el login con email y contraseña
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String username, String password) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _user = await repository.login(email, password);
+      _user = await repository.login(username, password);
 
       // Guardar token en FlutterSecureStorage
       if (_user?.token != null && (_user?.token ?? '').isNotEmpty) {
