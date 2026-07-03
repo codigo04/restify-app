@@ -915,17 +915,33 @@ class _TablesScreenState extends State<TablesScreen>
   ) {
     final isCurrent = table.status == targetStatus;
     return InkWell(
-      onTap: () {
-        context.read<MesaProvider>().updateTableStatus(table.id, targetStatus);
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${table.name} cambiada a $label'),
-            backgroundColor: color,
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      },
+      onTap: isCurrent
+          ? null
+          : () async {
+              final mesaProvider = context.read<MesaProvider>();
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+
+              final ok = await mesaProvider.cambiarEstado(
+                table.id,
+                targetStatus,
+              );
+
+              if (!mounted) return;
+              navigator.pop();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    ok
+                        ? '${table.name} cambiada a $label'
+                        : (mesaProvider.error ??
+                              'No se pudo actualizar la mesa'),
+                  ),
+                  backgroundColor: ok ? color : AppColors.error,
+                  duration: const Duration(seconds: 1),
+                ),
+              );
+            },
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: 72,

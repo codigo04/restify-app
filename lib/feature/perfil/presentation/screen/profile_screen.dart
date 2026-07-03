@@ -1,34 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:restifyapp/core/theme/app_colors.dart';
+import 'package:restifyapp/feature/auth/domain/model/user.dart';
 import 'package:restifyapp/feature/auth/domain/model/user_role.dart';
+import 'package:restifyapp/feature/auth/presentation/provider/login_provider.dart';
 import 'package:restifyapp/feature/auth/presentation/screen/login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
+  final User user;
   final UserRole role;
 
-  const ProfileScreen({super.key, required this.role});
-
-  String _getUserName() {
-    switch (role) {
-      case UserRole.waiter:
-        return 'Salomón Guerrero';
-      case UserRole.kitchen:
-        return 'Chef Gustavo Olivera';
-      case UserRole.SUPER_ADMIN:
-        return 'Administrador Principal';
-    }
-  }
-
-  String _getUserEmail() {
-    switch (role) {
-      case UserRole.waiter:
-        return 'salomon.mesero@restify.com';
-      case UserRole.kitchen:
-        return 'gustavo.cocina@restify.com';
-      case UserRole.SUPER_ADMIN:
-        return 'admin@restify.com';
-    }
-  }
+  const ProfileScreen({super.key, required this.user, required this.role});
 
   String _getRoleName() {
     switch (role) {
@@ -125,13 +107,18 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 elevation: 0,
               ),
-              onPressed: () {
-                Navigator.pop(context); // close dialog
-                Navigator.of(context).pushAndRemoveUntil(
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
+
+                await context.read<LoginProvider>().logout();
+
+                navigator.pop(); // close dialog
+                navigator.pushAndRemoveUntil(
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
                   (route) => false,
                 );
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   const SnackBar(
                     content: Text('Sesión cerrada correctamente'),
                     backgroundColor: AppColors.success,
@@ -182,7 +169,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildRoleAvatar(),
                   const SizedBox(height: 16),
                   Text(
-                    _getUserName(),
+                    user.email,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
@@ -192,7 +179,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _getUserEmail(),
+                    user.razonSocial,
                     style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,

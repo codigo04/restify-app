@@ -6,10 +6,10 @@ import 'package:restifyapp/feature/order/presentation/provider/pedido_provider.d
 import 'package:restifyapp/feature/tables/domain/model/table_model.dart';
 import 'package:restifyapp/feature/tables/presentation/provider/mesa_provider.dart';
 
-const _kdsBackground = Color(0xFF121212);
-const _kdsSurface = Color(0xFF1E1E1E);
-const _kdsSurfaceAlt = Color(0xFF262626);
-const _kdsWarning = Color(0xFFFFB300);
+const _kdsBackground = AppColors.greyBackground;
+const _kdsSurface = AppColors.surface;
+const _kdsSurfaceAlt = AppColors.greyLight;
+const _kdsWarning = Color(0xFFF57C00);
 
 class KitchenScreen extends StatefulWidget {
   const KitchenScreen({super.key});
@@ -74,7 +74,7 @@ class _KitchenScreenState extends State<KitchenScreen> {
         title: const Text(
           'COCINA (KDS)',
           style: TextStyle(
-            color: Colors.white,
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
           ),
@@ -108,7 +108,7 @@ class _KitchenScreenState extends State<KitchenScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white70),
+            icon: const Icon(Icons.refresh, color: AppColors.greyMedium),
             onPressed: _refresh,
             tooltip: 'Actualizar',
           ),
@@ -137,7 +137,7 @@ class _KitchenScreenState extends State<KitchenScreen> {
                   const SizedBox(height: 12),
                   Text(
                     pedidoProvider.cocinaError!,
-                    style: const TextStyle(color: Colors.white54),
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
@@ -166,14 +166,14 @@ class _KitchenScreenState extends State<KitchenScreen> {
                   const Icon(
                     Icons.restaurant_rounded,
                     size: 56,
-                    color: Colors.white24,
+                    color: AppColors.greyMedium,
                   ),
                   const SizedBox(height: 16),
                   const Center(
                     child: Text(
                       'Sin pedidos pendientes',
                       style: TextStyle(
-                        color: Colors.white54,
+                        color: AppColors.textSecondary,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
@@ -183,7 +183,10 @@ class _KitchenScreenState extends State<KitchenScreen> {
                   const Center(
                     child: Text(
                       'Los nuevos pedidos aparecerán aquí',
-                      style: TextStyle(color: Colors.white24, fontSize: 12),
+                      style: TextStyle(
+                        color: AppColors.greyMedium,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -256,7 +259,7 @@ class _OrderTicket extends StatelessWidget {
         ? Colors.redAccent
         : isWarning
         ? _kdsWarning
-        : Colors.grey.shade800;
+        : AppColors.greyBorder;
     final estado = (pedido.estado ?? 'PENDIENTE').toUpperCase();
     final totalItems = pedido.detalles.fold<double>(
       0,
@@ -277,6 +280,12 @@ class _OrderTicket extends StatelessWidget {
               color: Colors.redAccent.withValues(alpha: 0.25),
               blurRadius: 12,
               spreadRadius: 1,
+            )
+          else
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
         ],
       ),
@@ -304,7 +313,7 @@ class _OrderTicket extends StatelessWidget {
                       Text(
                         nombreMesa.toUpperCase(),
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: 17,
                           letterSpacing: -0.3,
@@ -330,7 +339,7 @@ class _OrderTicket extends StatelessWidget {
                               ? Colors.redAccent
                               : isWarning
                               ? _kdsWarning
-                              : Colors.white54,
+                              : AppColors.greyMedium,
                         ),
                         const SizedBox(width: 3),
                         Text(
@@ -340,7 +349,7 @@ class _OrderTicket extends StatelessWidget {
                                 ? Colors.redAccent
                                 : isWarning
                                 ? _kdsWarning
-                                : Colors.white54,
+                                : AppColors.greyText,
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
@@ -353,7 +362,7 @@ class _OrderTicket extends StatelessWidget {
                           ? '${totalItems.toInt()} ítems'
                           : '${totalItems.toStringAsFixed(1)} ítems',
                       style: const TextStyle(
-                        color: Colors.white38,
+                        color: AppColors.greyMedium,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -364,7 +373,7 @@ class _OrderTicket extends StatelessWidget {
             ),
           ),
 
-          const Divider(color: Colors.white10, height: 1),
+          const Divider(color: AppColors.greyBorder, height: 1),
 
           // Lista de items
           Expanded(
@@ -372,7 +381,7 @@ class _OrderTicket extends StatelessWidget {
                 ? const Center(
                     child: Text(
                       'Sin ítems',
-                      style: TextStyle(color: Colors.white24),
+                      style: TextStyle(color: AppColors.greyMedium),
                     ),
                   )
                 : ListView.separated(
@@ -414,7 +423,7 @@ class _OrderTicket extends StatelessWidget {
                                 Text(
                                   item.nombre,
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.textPrimary,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     height: 1.2,
@@ -427,7 +436,7 @@ class _OrderTicket extends StatelessWidget {
                                     child: Text(
                                       item.observacion!,
                                       style: const TextStyle(
-                                        color: Colors.orangeAccent,
+                                        color: AppColors.orangeAlert,
                                         fontSize: 12,
                                         fontStyle: FontStyle.italic,
                                       ),
@@ -480,7 +489,7 @@ class _EstadoBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isEnProceso = estado == 'EN_PROCESO';
-    final color = isEnProceso ? _kdsWarning : Colors.lightBlueAccent;
+    final color = isEnProceso ? _kdsWarning : AppColors.statBlue;
     final label = isEnProceso ? 'EN PREPARACIÓN' : 'NUEVO';
 
     return Container(

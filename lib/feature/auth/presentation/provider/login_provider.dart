@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:restifyapp/feature/auth/data/repository/test3.dart';
 import 'package:restifyapp/feature/auth/domain/model/user.dart';
 
@@ -49,12 +50,17 @@ class LoginProvider extends ChangeNotifier {
     }
   }
 
-  /// Cierra la sesión
+  /// Cierra la sesión: limpia el usuario en memoria y toda la sesión persistida
+  /// (token seguro + preferencias), igual que el logout forzado por 401.
   Future<void> logout() async {
     _user = null;
     _error = null;
     _isLoading = false;
-    await _secureStorage.delete(key: 'token');
+
+    await _secureStorage.deleteAll();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_session');
+
     notifyListeners();
   }
 

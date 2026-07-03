@@ -52,19 +52,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Map JWT authorities claim to local role enum
               UserRole? selectedRole;
-              switch (user.rolNombre) {
+              switch (user.rolNombre.toUpperCase()) {
                 case 'SUPER_ADMIN':
                   selectedRole = UserRole.SUPER_ADMIN;
                 case 'MESERO':
                   selectedRole = UserRole.waiter;
                 case 'COCINA':
+                case 'COCINERO':
                   selectedRole = UserRole.kitchen;
               }
 
               if (selectedRole != null) {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (context) => HomeScreen(role: selectedRole!),
+                    builder: (context) =>
+                        HomeScreen(user: user, role: selectedRole!),
                   ),
                 );
               } else {
@@ -182,8 +184,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               // Formulario
               CustomTextField(
-                label: 'Usuario o Correo',
-                hint: 'ejemplo@correo.com',
+                label: 'Usuario',
+                hint: 'Tu nombre de usuario',
                 icon: Icons.person_outline,
                 controller: _userController,
               ),
@@ -207,14 +209,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 40),
               // Decoración o Pie de página minimalista
-              const Text(
-                'Gestión de Restaurante Inteligente',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
               const SizedBox(height: 20),
             ],
           ),

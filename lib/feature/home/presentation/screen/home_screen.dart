@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:restifyapp/core/theme/app_colors.dart';
 import 'package:restifyapp/feature/tables/presentation/screen/tables_screen.dart';
 import 'package:restifyapp/feature/kitchen/presentation/screen/kitchen_screen.dart';
+import 'package:restifyapp/feature/kitchen/presentation/screen/kitchen_history_screen.dart';
+import 'package:restifyapp/feature/auth/domain/model/user.dart';
 import 'package:restifyapp/feature/auth/domain/model/user_role.dart';
 import 'package:restifyapp/feature/home/presentation/screen/dashboard_screen.dart';
 import 'package:restifyapp/feature/perfil/presentation/screen/profile_screen.dart';
 import 'package:restifyapp/feature/order/presentation/screen/my_orders_screen.dart';
+import 'package:restifyapp/feature/order/presentation/screen/admin_billing_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  final User user;
   final UserRole role;
 
-  const HomeScreen({super.key, required this.role});
+  const HomeScreen({super.key, required this.user, required this.role});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -32,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (widget.role == UserRole.waiter) {
       _screens = [
         DashboardScreen(
+          user: widget.user,
           role: widget.role,
           onTabChange: (index) {
             setState(() {
@@ -41,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const TablesScreen(),
         const MyOrdersScreen(),
-        ProfileScreen(role: widget.role),
+        ProfileScreen(user: widget.user, role: widget.role),
       ];
       _navItems = const [
         BottomNavigationBarItem(
@@ -64,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (widget.role == UserRole.kitchen) {
       _screens = [
         DashboardScreen(
+          user: widget.user,
           role: widget.role,
           onTabChange: (index) {
             setState(() {
@@ -72,17 +78,8 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         const KitchenScreen(),
-        const _PlaceholderScreen(
-          title: 'Historial Cocina',
-          icon: Icons.checklist,
-          color: Colors.orange,
-        ),
-        const _PlaceholderScreen(
-          title: 'Inventario',
-          icon: Icons.inventory_2_outlined,
-          color: Colors.brown,
-        ),
-        ProfileScreen(role: widget.role),
+        const KitchenHistoryScreen(),
+        ProfileScreen(user: widget.user, role: widget.role),
       ];
       _navItems = const [
         BottomNavigationBarItem(
@@ -100,10 +97,6 @@ class _HomeScreenState extends State<HomeScreen> {
           label: 'Historial',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.inventory_2_outlined),
-          label: 'Stock',
-        ),
-        BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),
           activeIcon: Icon(Icons.person),
           label: 'Perfil',
@@ -113,6 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Admin o por defecto
       _screens = [
         DashboardScreen(
+          user: widget.user,
           role: widget.role,
           onTabChange: (index) {
             setState(() {
@@ -122,7 +116,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const TablesScreen(),
         const KitchenScreen(),
-        ProfileScreen(role: widget.role),
+        const AdminBillingScreen(),
+        ProfileScreen(user: widget.user, role: widget.role),
       ];
       _navItems = const [
         BottomNavigationBarItem(
@@ -137,6 +132,11 @@ class _HomeScreenState extends State<HomeScreen> {
         BottomNavigationBarItem(
           icon: Icon(Icons.soup_kitchen_outlined),
           label: 'Cocina',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.payments_outlined),
+          activeIcon: Icon(Icons.payments),
+          label: 'Cobros',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),
@@ -164,59 +164,6 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: AppColors.textSecondary,
         elevation: 8,
         items: _navItems,
-      ),
-    );
-  }
-}
-
-// Pantalla temporal para módulos en construcción
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Color color;
-
-  const _PlaceholderScreen({
-    required this.title,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 80, color: color.withOpacity(0.5)),
-            const SizedBox(height: 16),
-            Text(
-              'Módulo $title',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Próximamente',
-              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-            ),
-          ],
-        ),
       ),
     );
   }
