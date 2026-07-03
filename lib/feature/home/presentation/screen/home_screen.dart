@@ -5,6 +5,7 @@ import 'package:restifyapp/feature/kitchen/presentation/screen/kitchen_screen.da
 import 'package:restifyapp/feature/auth/domain/model/user_role.dart';
 import 'package:restifyapp/feature/home/presentation/screen/dashboard_screen.dart';
 import 'package:restifyapp/feature/perfil/presentation/screen/profile_screen.dart';
+import 'package:restifyapp/feature/order/presentation/screen/my_orders_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final UserRole role;
@@ -39,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         const TablesScreen(),
-        const _PlaceholderScreen(title: 'Mis Pedidos', icon: Icons.history, color: AppColors.primary),
+        const MyOrdersScreen(),
         ProfileScreen(role: widget.role),
       ];
       _navItems = const [
@@ -53,10 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
           activeIcon: Icon(Icons.room_service),
           label: 'Mesas',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.history),
-          label: 'Pedidos',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Pedidos'),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),
           activeIcon: Icon(Icons.person),
@@ -74,8 +72,16 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         const KitchenScreen(),
-        const _PlaceholderScreen(title: 'Historial Cocina', icon: Icons.checklist, color: Colors.orange),
-        const _PlaceholderScreen(title: 'Inventario', icon: Icons.inventory_2_outlined, color: Colors.brown),
+        const _PlaceholderScreen(
+          title: 'Historial Cocina',
+          icon: Icons.checklist,
+          color: Colors.orange,
+        ),
+        const _PlaceholderScreen(
+          title: 'Inventario',
+          icon: Icons.inventory_2_outlined,
+          color: Colors.brown,
+        ),
         ProfileScreen(role: widget.role),
       ];
       _navItems = const [
@@ -116,8 +122,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const TablesScreen(),
         const KitchenScreen(),
-        const _PlaceholderScreen(title: 'Caja (POS)', icon: Icons.point_of_sale_outlined, color: Colors.green),
-        const _PlaceholderScreen(title: 'Ajustes', icon: Icons.settings_outlined, color: AppColors.secondary),
         ProfileScreen(role: widget.role),
       ];
       _navItems = const [
@@ -133,14 +137,6 @@ class _HomeScreenState extends State<HomeScreen> {
         BottomNavigationBarItem(
           icon: Icon(Icons.soup_kitchen_outlined),
           label: 'Cocina',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.point_of_sale_outlined),
-          label: 'Caja',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_outlined),
-          label: 'Ajustes',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),
@@ -217,10 +213,7 @@ class _PlaceholderScreen extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               'Próximamente',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
             ),
           ],
         ),

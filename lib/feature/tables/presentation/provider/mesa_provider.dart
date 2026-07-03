@@ -46,6 +46,22 @@ class MesaProvider extends ChangeNotifier {
     }
   }
 
+  /// Cambia el estado de la mesa en el backend y refleja el cambio localmente.
+  Future<bool> cambiarEstado(String tableId, TableStatus newStatus) async {
+    final mesaId = int.tryParse(tableId);
+    if (mesaId == null) return false;
+
+    try {
+      await repository.cambiarEstado(mesaId, newStatus);
+      updateTableStatus(tableId, newStatus);
+      return true;
+    } catch (e) {
+      _error = _parseError(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();

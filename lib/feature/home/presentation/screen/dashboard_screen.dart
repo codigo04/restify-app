@@ -285,13 +285,6 @@ class DashboardScreen extends StatelessWidget {
           'color': AppColors.secondary,
           'tabIndex': 2,
         },
-        {
-          'title': 'Caja Registradora',
-          'subtitle': 'Simulador POS',
-          'icon': Icons.point_of_sale_rounded,
-          'color': AppColors.success,
-          'tabIndex': 3,
-        },
       ];
     }
 

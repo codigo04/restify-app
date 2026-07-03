@@ -71,74 +71,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  List<Map<String, dynamic>> _getStats() {
-    switch (role) {
-      case UserRole.waiter:
-        return [
-          {
-            'label': 'Mesas hoy',
-            'value': '18',
-            'icon': Icons.table_bar_rounded,
-            'color': AppColors.primary,
-          },
-          {
-            'label': 'Ventas',
-            'value': 'S/ 1,420.00',
-            'icon': Icons.monetization_on_rounded,
-            'color': AppColors.success,
-          },
-          {
-            'label': 'Calificación',
-            'value': '4.9 ★',
-            'icon': Icons.star_rate_rounded,
-            'color': Colors.amber,
-          },
-        ];
-      case UserRole.kitchen:
-        return [
-          {
-            'label': 'Platos despachados',
-            'value': '42',
-            'icon': Icons.flatware_rounded,
-            'color': Colors.orange,
-          },
-          {
-            'label': 'Tiempo prom.',
-            'value': '11 min',
-            'icon': Icons.timer_rounded,
-            'color': AppColors.secondary,
-          },
-          {
-            'label': 'Eficiencia',
-            'value': '99.2%',
-            'icon': Icons.offline_bolt_rounded,
-            'color': AppColors.success,
-          },
-        ];
-      case UserRole.SUPER_ADMIN:
-        return [
-          {
-            'label': 'Ingresos hoy',
-            'value': 'S/ 8,240.00',
-            'icon': Icons.payments_rounded,
-            'color': AppColors.success,
-          },
-          {
-            'label': 'Mesas ocupadas',
-            'value': '8 / 12',
-            'icon': Icons.grid_view_rounded,
-            'color': AppColors.primary,
-          },
-          {
-            'label': 'Personal activo',
-            'value': '6',
-            'icon': Icons.people_alt_rounded,
-            'color': Colors.blue,
-          },
-        ];
-    }
-  }
-
   void _handleLogout(BuildContext context) {
     showDialog(
       context: context,
@@ -223,8 +155,6 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stats = _getStats();
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -309,86 +239,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 32),
-
-            // Sección de Métricas / Rendimiento
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'RENDIMIENTO DE HOY',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textSecondary,
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: stats.map((stat) {
-                return Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppColors.greyBorder,
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.01),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: (stat['color'] as Color).withOpacity(0.08),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            stat['icon'] as IconData,
-                            color: stat['color'] as Color,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          stat['value'] as String,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          stat['label'] as String,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
             ),
             const SizedBox(height: 32),
 

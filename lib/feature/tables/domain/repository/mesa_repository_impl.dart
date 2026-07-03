@@ -15,10 +15,11 @@ class MesaRepositoryImpl implements MesaRepository {
       final response = await dataSource.getMesas();
       return response.data.map((mesa) {
         return TableModel(
-          id: mesa.id.toString(),
-          name: 'Mesa ${mesa.numeromesa.padLeft(2, '0')}',
+          id: mesa.mesaId.toString(),
+          name: mesa.nombre,
           capacity: mesa.capacidad,
-          status: _mapEstado(mesa.estado),
+          status: _mapEstado(mesa.estadoMesa),
+          zone: mesa.ubicacion ?? 'Salón Central',
         );
       }).toList();
     } catch (e) {
@@ -26,14 +27,36 @@ class MesaRepositoryImpl implements MesaRepository {
     }
   }
 
-  TableStatus _mapEstado(String estado) {
-    switch (estado) {
-      case '1':
+  TableStatus _mapEstado(String estadoMesa) {
+    switch (estadoMesa.toUpperCase()) {
+      case 'LIBRE':
         return TableStatus.available;
-      case '0':
+      case 'OCUPADA':
         return TableStatus.occupied;
+      case 'RESERVADA':
+        return TableStatus.reserved;
+      case 'LIMPIEZA':
+        return TableStatus.cleaning;
       default:
         return TableStatus.available;
     }
+  }
+
+  String _estadoToBackend(TableStatus estado) {
+    switch (estado) {
+      case TableStatus.available:
+        return 'LIBRE';
+      case TableStatus.occupied:
+        return 'OCUPADA';
+      case TableStatus.reserved:
+        return 'RESERVADA';
+      case TableStatus.cleaning:
+        return 'LIMPIEZA';
+    }
+  }
+
+  @override
+  Future<void> cambiarEstado(int mesaId, TableStatus estado) async {
+    await dataSource.cambiarEstado(mesaId, _estadoToBackend(estado));
   }
 }

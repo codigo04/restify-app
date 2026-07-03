@@ -5,6 +5,11 @@ import 'package:restifyapp/feature/tables/domain/model/table_model.dart';
 import 'package:restifyapp/feature/order/domain/model/product_model.dart';
 import 'package:restifyapp/feature/order/domain/model/producto_model.dart';
 import 'package:restifyapp/feature/order/presentation/provider/producto_provider.dart';
+import 'package:restifyapp/feature/order/data/dto/request/pedido_create_request.dart';
+import 'package:restifyapp/feature/order/presentation/provider/pedido_provider.dart';
+import 'package:restifyapp/feature/categoria/domain/model/categoria_model.dart';
+import 'package:restifyapp/feature/categoria/presentation/provider/categoria_provider.dart';
+import 'package:restifyapp/feature/tables/presentation/provider/mesa_provider.dart';
 
 // Modelo local para representar elementos en el carrito con cantidad y extras
 class CartItem {
@@ -36,34 +41,47 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
   // Lista del carrito de la mesa usando CartItem
   final List<CartItem> _currentOrder = [];
 
-  String _selectedCategory = 'Entradas';
+  int? _selectedCategoriaId;
 
-  final List<String> _categories = [
-    'Entradas',
-    'Platos de Fondo',
-    'Bebidas',
-    'Postres',
-  ];
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Cargar productos de la empresa del usuario logueado (asumiendo idEmpresa = 1)
-      context.read<ProductoProvider>().loadProductos(1);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final categoriaProvider = context.read<CategoriaProvider>();
+      await categoriaProvider.loadCategorias();
+
+      if (!mounted) return;
+      final categorias = categoriaProvider.categorias;
+      if (categorias.isNotEmpty) {
+        _selectCategoria(categorias.first.id);
+      }
     });
   }
 
-  bool _categoriaMatches(int idCategoria) {
-    // Mapeo simplificado: en producción esto vendría del API
-    // Por ahora usamos idCategoria como índice
-    final categoriaMap = {
-      1: 'Entradas',
-      2: 'Platos de Fondo',
-      3: 'Bebidas',
-      4: 'Postres',
-    };
-    return (categoriaMap[idCategoria] ?? 'Entradas') == _selectedCategory;
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchController.clear();
+        context.read<ProductoProvider>().searchProductos('');
+      }
+    });
+  }
+
+  void _selectCategoria(int categoriaId) {
+    setState(() {
+      _selectedCategoriaId = categoriaId;
+    });
+    context.read<ProductoProvider>().loadProductosPorCategoria(categoriaId);
   }
 
   void _addToOrder(ProductoModel product) {
@@ -82,7 +100,7 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
               name: product.nombre,
               description: product.descripcion ?? '',
               price: product.precio,
-              category: _getCategoryName(product.idCategoria),
+              category: product.categoriaNombre ?? '',
             ),
             quantity: 1,
           ),
@@ -100,14 +118,63 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
     );
   }
 
-  String _getCategoryName(int idCategoria) {
-    final categoriaMap = {
-      1: 'Entradas',
-      2: 'Platos de Fondo',
-      3: 'Bebidas',
-      4: 'Postres',
-    };
-    return categoriaMap[idCategoria] ?? 'Otros';
+  Future<void> _enviarComanda() async {
+    final mesaId = int.tryParse(widget.table.id);
+    if (mesaId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mesa inválida, no se pudo enviar la comanda'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final request = PedidoCreateRequest(
+      mesaId: mesaId,
+      detalles: _currentOrder
+          .map(
+            (item) => DetallePedidoRequest(
+              productoId: int.parse(item.product.id),
+              descripcionItem: item.product.name,
+              cantidad: item.quantity,
+              precioUnitario: item.product.price,
+            ),
+          )
+          .toList(),
+    );
+
+    final pedido = await context.read<PedidoProvider>().enviarComanda(
+      request,
+    );
+
+    if (!mounted) return;
+
+    if (pedido != null) {
+      setState(() {
+        _currentOrder.clear();
+      });
+      if (widget.table.status != TableStatus.occupied) {
+        await context.read<MesaProvider>().cambiarEstado(
+          widget.table.id,
+          TableStatus.occupied,
+        );
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Comanda enviada con éxito a cocina!'),
+          backgroundColor: Color(0xFF00B26A),
+        ),
+      );
+    } else {
+      final error =
+          context.read<PedidoProvider>().error ??
+          'No se pudo enviar la comanda';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: AppColors.error),
+      );
+    }
   }
 
   @override
@@ -126,32 +193,52 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Tomar Pedido',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-                letterSpacing: -0.5,
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                ),
+                decoration: const InputDecoration(
+                  hintText: 'Buscar producto...',
+                  hintStyle: TextStyle(color: AppColors.textSecondary),
+                  border: InputBorder.none,
+                ),
+                onChanged: (query) {
+                  context.read<ProductoProvider>().searchProductos(query);
+                },
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Tomar Pedido',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  Text(
+                    '${widget.table.name} • $totalCount ítems en orden',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Text(
-              '${widget.table.name} • $totalCount ítems en orden',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: AppColors.textSecondary),
-            onPressed: () {},
+            icon: Icon(
+              _isSearching ? Icons.close : Icons.search,
+              color: AppColors.textSecondary,
+            ),
+            onPressed: _toggleSearch,
           ),
         ],
       ),
@@ -177,51 +264,74 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
     return Container(
       height: 60,
       color: AppColors.surface,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          final isSelected = category == _selectedCategory;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  _selectedCategory = category;
-                });
-              },
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.background,
+      child: Consumer<CategoriaProvider>(
+        builder: (context, categoriaProvider, _) {
+          if (categoriaProvider.isLoading) {
+            return const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            );
+          }
+
+          if (categoriaProvider.error != null) {
+            return Center(
+              child: Text(
+                categoriaProvider.error!,
+                style: const TextStyle(color: AppColors.error, fontSize: 12),
+              ),
+            );
+          }
+
+          final categorias = categoriaProvider.categorias;
+
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            itemCount: categorias.length,
+            itemBuilder: (context, index) {
+              final CategoriaModel categoria = categorias[index];
+              final isSelected = categoria.id == _selectedCategoriaId;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: InkWell(
+                  onTap: () => _selectCategoria(categoria.id),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : Colors.grey.shade300,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    category,
-                    style: TextStyle(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
                       color: isSelected
-                          ? Colors.white
-                          : AppColors.textSecondary,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
+                          ? AppColors.primary
+                          : AppColors.background,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : Colors.grey.shade300,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        categoria.nombre,
+                        style: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.textSecondary,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           );
         },
       ),
@@ -254,8 +364,11 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
-                    // Leer idEmpresa del usuario (por ahora hardcodeado)
-                    provider.loadProductos(1);
+                    if (_selectedCategoriaId != null) {
+                      provider.loadProductosPorCategoria(
+                        _selectedCategoriaId!,
+                      );
+                    }
                   },
                   child: const Text('Reintentar'),
                 ),
@@ -264,13 +377,15 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
           );
         }
 
-        final products = provider.productos
-            .where((p) => _categoriaMatches(p.idCategoria))
-            .toList();
+        final products = provider.productosFiltrados;
 
         if (products.isEmpty) {
-          return const Center(
-            child: Text('No hay productos en esta categoría'),
+          return Center(
+            child: Text(
+              provider.searchQuery.isNotEmpty
+                  ? 'Sin resultados para "${provider.searchQuery}"'
+                  : 'No hay productos en esta categoría',
+            ),
           );
         }
 
@@ -321,20 +436,17 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: foodIconColor.withOpacity(0.08),
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(16),
-                            ),
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
                           ),
                           child: Stack(
                             children: [
-                              Center(
-                                child: Icon(
-                                  foodIcon,
-                                  color: foodIconColor,
-                                  size: 40,
+                              Positioned.fill(
+                                child: _ProductImage(
+                                  imageUrl: product.imagen,
+                                  fallbackIcon: foodIcon,
+                                  fallbackColor: foodIconColor,
                                 ),
                               ),
                               if (!product.disponible)
@@ -742,44 +854,48 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
           SizedBox(
             height: 48,
             width: 170,
-            child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _currentOrder.clear();
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('¡Comanda enviada con éxito a cocina!'),
-                    backgroundColor: Color(0xFF00B26A),
+            child: Consumer<PedidoProvider>(
+              builder: (context, pedidoProvider, _) {
+                return ElevatedButton(
+                  onPressed: pedidoProvider.isSending ? null : _enviarComanda,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        AppColors
+                            .primary, // Naranja corporativo igual al mockup
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shadowColor: AppColors.primary.withOpacity(0.3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
+                  child: pedidoProvider.isSending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.send_rounded, size: 16),
+                            SizedBox(width: 8),
+                            Text(
+                              'Enviar Comanda',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ],
+                        ),
                 );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    AppColors.primary, // Naranja corporativo igual al mockup
-                foregroundColor: Colors.white,
-                elevation: 2,
-                shadowColor: AppColors.primary.withOpacity(0.3),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.send_rounded, size: 16),
-                  SizedBox(width: 8),
-                  Text(
-                    'Enviar Comanda',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ],
@@ -1418,38 +1534,45 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
                         SizedBox(
                           width: double.infinity,
                           height: 52,
-                          child: ElevatedButton(
-                            onPressed: _currentOrder.isEmpty
-                                ? null
-                                : () {
-                                    Navigator.pop(context);
-                                    setState(() {
-                                      _currentOrder.clear();
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          '¡Comanda enviada con éxito a cocina!',
+                          child: Consumer<PedidoProvider>(
+                            builder: (context, pedidoProvider, _) {
+                              return ElevatedButton(
+                                onPressed:
+                                    _currentOrder.isEmpty ||
+                                        pedidoProvider.isSending
+                                    ? null
+                                    : () async {
+                                        await _enviarComanda();
+                                        if (context.mounted) {
+                                          Navigator.pop(context);
+                                        }
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF00B26A),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: pedidoProvider.isSending
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
                                         ),
-                                        backgroundColor: Color(0xFF00B26A),
+                                      )
+                                    : const Text(
+                                        'Enviar Comanda',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                       ),
-                                    );
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF00B26A),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: const Text(
-                              'Enviar Comanda',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -1461,6 +1584,62 @@ class _OrderTakingScreenState extends State<OrderTakingScreen> {
           },
         );
       },
+    );
+  }
+}
+
+/// Muestra la imagen real del producto (imagenUrl del backend) y cae al
+/// ícono decorativo si no hay URL, si falla la carga o mientras carga.
+class _ProductImage extends StatelessWidget {
+  final String? imageUrl;
+  final IconData fallbackIcon;
+  final Color fallbackColor;
+
+  const _ProductImage({
+    required this.imageUrl,
+    required this.fallbackIcon,
+    required this.fallbackColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl == null || imageUrl!.isEmpty) {
+      return _buildFallback();
+    }
+
+    return Image.network(
+      imageUrl!,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          color: fallbackColor.withOpacity(0.08),
+          child: Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: fallbackColor,
+                value: progress.expectedTotalBytes != null
+                    ? progress.cumulativeBytesLoaded /
+                          progress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) => _buildFallback(),
+    );
+  }
+
+  Widget _buildFallback() {
+    return Container(
+      color: fallbackColor.withOpacity(0.08),
+      child: Center(
+        child: Icon(fallbackIcon, color: fallbackColor, size: 40),
+      ),
     );
   }
 }

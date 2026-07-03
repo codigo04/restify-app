@@ -5,9 +5,8 @@ class ProductoModel {
   final String? descripcion;
   final String? imagen;
   final bool estado;
-  final int stock;
-  final String? litros;
   final int idCategoria;
+  final String? categoriaNombre;
 
   ProductoModel({
     required this.id,
@@ -16,10 +15,9 @@ class ProductoModel {
     this.descripcion,
     this.imagen,
     required this.estado,
-    required this.stock,
-    this.litros,
     required this.idCategoria,
+    this.categoriaNombre,
   });
 
-  bool get disponible => estado && stock > 0;
+  bool get disponible => estado;
 }

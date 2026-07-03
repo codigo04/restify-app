@@ -21,27 +21,39 @@ class MesaResponse {
 }
 
 class MesaData {
+  final int mesaId;
+  final int empresaId;
+  final String numeroMesa;
+  final String nombre;
   final int capacidad;
-  final String estado;
-  final int id;
-  final int idempresa;
-  final String numeromesa;
+  final String? ubicacion;
+  final String estadoMesa;
+  final bool isActive;
+  final bool isDeleted;
 
   MesaData({
+    required this.mesaId,
+    required this.empresaId,
+    required this.numeroMesa,
+    required this.nombre,
     required this.capacidad,
-    required this.estado,
-    required this.id,
-    required this.idempresa,
-    required this.numeromesa,
+    this.ubicacion,
+    required this.estadoMesa,
+    required this.isActive,
+    required this.isDeleted,
   });
 
   factory MesaData.fromJson(Map<String, dynamic> json) {
     return MesaData(
+      mesaId: json['mesaId'] ?? 0,
+      empresaId: json['empresaId'] ?? 0,
+      numeroMesa: json['numeroMesa']?.toString() ?? '',
+      nombre: json['nombre']?.toString() ?? '',
       capacidad: json['capacidad'] ?? 0,
-      estado: json['estado']?.toString() ?? '0',
-      id: json['id'] ?? 0,
-      idempresa: json['idempresa'] ?? 0,
-      numeromesa: json['numeromesa']?.toString() ?? '',
+      ubicacion: json['ubicacion']?.toString(),
+      estadoMesa: json['estadoMesa']?.toString() ?? 'LIBRE',
+      isActive: json['isActive'] ?? false,
+      isDeleted: json['isDeleted'] ?? false,
     );
   }
 }

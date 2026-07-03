@@ -9,6 +9,10 @@ import 'package:restifyapp/feature/tables/data/repository/mesa_repository.dart';
 import 'package:restifyapp/feature/tables/presentation/provider/mesa_provider.dart';
 import 'package:restifyapp/feature/order/domain/repository/producto_repository.dart';
 import 'package:restifyapp/feature/order/presentation/provider/producto_provider.dart';
+import 'package:restifyapp/feature/order/domain/repository/pedido_repository.dart';
+import 'package:restifyapp/feature/order/presentation/provider/pedido_provider.dart';
+import 'package:restifyapp/feature/categoria/domain/repository/categoria_repository.dart';
+import 'package:restifyapp/feature/categoria/presentation/provider/categoria_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +35,12 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => ProductoProvider(repository: getIt<ProductoRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CategoriaProvider(repository: getIt<CategoriaRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PedidoProvider(repository: getIt<PedidoRepository>()),
         ),
       ],
       child: MaterialApp(

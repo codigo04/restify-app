@@ -6,11 +6,8 @@ import 'package:restifyapp/core/network/auth_interceptor.dart';
 @module
 abstract class NetworkModule {
   @Named('BaseUrl') // Entorno desarrollo
-  String get baseUrl => 'http://192.168.18.30:8080';
+  String get baseUrl => 'http://192.168.18.45:8080';
 
-  // @Named('BaseUrl') // Entorno produccion
-  // String get baseUrl => 'https://night-pass-go-api-fcigf.us-east-1.migetapp.com';
-  //String get baseUrl => 'https://night-pass-go-api.onrender.com';
 
   @lazySingleton
   FlutterSecureStorage secureStorage() => const FlutterSecureStorage();

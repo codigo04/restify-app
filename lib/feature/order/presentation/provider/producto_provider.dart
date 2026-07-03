@@ -38,6 +38,24 @@ class ProductoProvider extends ChangeNotifier {
     }
   }
 
+  /// Carga productos de una categoría específica
+  Future<void> loadProductosPorCategoria(int categoriaId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _productos = await repository.getProductosByCategoria(categoriaId);
+      _productosFiltrados = List.from(_productos);
+      _error = null;
+    } catch (e) {
+      _error = _parseError(e);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   /// Busca productos por nombre
   void searchProductos(String query) {
     _searchQuery = query.toLowerCase();

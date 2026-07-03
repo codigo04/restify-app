@@ -13,54 +13,60 @@ class ProductoResponse {
 }
 
 class ProductoData {
-  final int id;
+  final int productoId;
+  final int empresaId;
+  final int categoriaId;
+  final String? categoriaNombre;
+  final int unidadMedidaId;
+  final String? unidadMedidaNombre;
+  final String? unidadMedidaCodigoSunat;
+  final String? codigoProducto;
   final String nombre;
-  final double precio;
   final String? descripcion;
-  final String? imagen;
-  final bool estado;
-  final bool eliminado;
-  final String? porcion;
-  final int stock;
-  final String? litros;
-  final int idCategoria;
-  final int idUnidadMedida;
-  final String? codigoSunat;
-  final int idEmpresa;
+  final String? tipoProducto;
+  final double precioVenta;
+  final bool afectaIgv;
+  final String? imagenUrl;
+  final bool isActive;
+  final bool isDeleted;
 
   ProductoData({
-    required this.id,
+    required this.productoId,
+    required this.empresaId,
+    required this.categoriaId,
+    this.categoriaNombre,
+    required this.unidadMedidaId,
+    this.unidadMedidaNombre,
+    this.unidadMedidaCodigoSunat,
+    this.codigoProducto,
     required this.nombre,
-    required this.precio,
     this.descripcion,
-    this.imagen,
-    required this.estado,
-    required this.eliminado,
-    this.porcion,
-    required this.stock,
-    this.litros,
-    required this.idCategoria,
-    required this.idUnidadMedida,
-    this.codigoSunat,
-    required this.idEmpresa,
+    this.tipoProducto,
+    required this.precioVenta,
+    required this.afectaIgv,
+    this.imagenUrl,
+    required this.isActive,
+    required this.isDeleted,
   });
 
   factory ProductoData.fromJson(Map<String, dynamic> json) {
     return ProductoData(
-      id: json['id'] ?? 0,
+      productoId: json['productoId'] ?? 0,
+      empresaId: json['empresaId'] ?? 0,
+      categoriaId: json['categoriaId'] ?? 0,
+      categoriaNombre: json['categoriaNombre']?.toString(),
+      unidadMedidaId: json['unidadMedidaId'] ?? 0,
+      unidadMedidaNombre: json['unidadMedidaNombre']?.toString(),
+      unidadMedidaCodigoSunat: json['unidadMedidaCodigoSunat']?.toString(),
+      codigoProducto: json['codigoProducto']?.toString(),
       nombre: json['nombre'] ?? '',
-      precio: (json['precio'] as num?)?.toDouble() ?? 0.0,
       descripcion: json['descripcion']?.toString(),
-      imagen: json['imagen']?.toString(),
-      estado: json['estado'] ?? true,
-      eliminado: json['eliminado'] ?? false,
-      porcion: json['porcion']?.toString(),
-      stock: json['stock'] ?? 0,
-      litros: json['litros']?.toString(),
-      idCategoria: json['idCategoria'] ?? 0,
-      idUnidadMedida: json['idUnidadMedida'] ?? 0,
-      codigoSunat: json['codigoSunat']?.toString(),
-      idEmpresa: json['idEmpresa'] ?? 0,
+      tipoProducto: json['tipoProducto']?.toString(),
+      precioVenta: (json['precioVenta'] as num?)?.toDouble() ?? 0.0,
+      afectaIgv: json['afectaIgv'] ?? false,
+      imagenUrl: json['imagenUrl']?.toString(),
+      isActive: json['isActive'] ?? true,
+      isDeleted: json['isDeleted'] ?? false,
     );
   }
 }
